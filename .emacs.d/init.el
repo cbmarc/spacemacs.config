@@ -58,3 +58,4 @@
       (global-undo-tree-mode -1)
       (setq spacemacs-dump-mode 'dumped)
       (garbage-collect))))
+
