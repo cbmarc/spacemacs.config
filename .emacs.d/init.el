@@ -1,60 +1,73 @@
-;;; init.el --- Spacemacs Initialization File
+;;; init.el -*- lexical-binding: t; -*-
 ;;
-;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
+;; Author:  Henrik Lissner <henrik@lissner.net>
+;; URL:     https://github.com/hlissner/doom-emacs
 ;;
-;; Author: Sylvain Benner <sylvain.benner@gmail.com>
-;; URL: https://github.com/syl20bnr/spacemacs
+;;   =================     ===============     ===============   ========  ========
+;;   \\ . . . . . . .\\   //. . . . . . .\\   //. . . . . . .\\  \\. . .\\// . . //
+;;   ||. . ._____. . .|| ||. . ._____. . .|| ||. . ._____. . .|| || . . .\/ . . .||
+;;   || . .||   ||. . || || . .||   ||. . || || . .||   ||. . || ||. . . . . . . ||
+;;   ||. . ||   || . .|| ||. . ||   || . .|| ||. . ||   || . .|| || . | . . . . .||
+;;   || . .||   ||. _-|| ||-_ .||   ||. . || || . .||   ||. _-|| ||-_.|\ . . . . ||
+;;   ||. . ||   ||-'  || ||  `-||   || . .|| ||. . ||   ||-'  || ||  `|\_ . .|. .||
+;;   || . _||   ||    || ||    ||   ||_ . || || . _||   ||    || ||   |\ `-_/| . ||
+;;   ||_-' ||  .|/    || ||    \|.  || `-_|| ||_-' ||  .|/    || ||   | \  / |-_.||
+;;   ||    ||_-'      || ||      `-_||    || ||    ||_-'      || ||   | \  / |  `||
+;;   ||    `'         || ||         `'    || ||    `'         || ||   | \  / |   ||
+;;   ||            .===' `===.         .==='.`===.         .===' /==. |  \/  |   ||
+;;   ||         .=='   \_|-_ `===. .==='   _|_   `===. .===' _-|/   `==  \/  |   ||
+;;   ||      .=='    _-'    `-_  `='    _-'   `-_    `='  _-'   `-_  /|  \/  |   ||
+;;   ||   .=='    _-'          '-__\._-'         '-_./__-'         `' |. /|  |   ||
+;;   ||.=='    _-'                                                     `' |  /==.||
+;;   =='    _-'                                                            \/   `==
+;;   \   _-'                                                                `-_   /
+;;    `''                                                                      ``'
 ;;
-;; This file is not part of GNU Emacs.
+;; These demons are not part of GNU Emacs.
 ;;
-;;; License: GPLv3
+;;; License: MIT
 
-;; Without this comment emacs25 adds (package-initialize) here
-;; (package-initialize)
+(defvar doom-gc-cons-threshold 16777216 ; 16mb
+  "The default value to use for `gc-cons-threshold'. If you experience freezing,
+decrease this. If you experience stuttering, increase this.")
 
-;; Avoid garbage collection during startup.
-;; see `SPC h . dotspacemacs-gc-cons' for more info
-(defconst emacs-start-time (current-time))
-(setq gc-cons-threshold 402653184 gc-cons-percentage 0.6)
-(load (concat (file-name-directory load-file-name)
-              "core/core-versions.el")
-      nil (not init-file-debug))
-(load (concat (file-name-directory load-file-name)
-              "core/core-load-paths.el")
-      nil (not init-file-debug))
-(load (concat spacemacs-core-directory "core-dumper.el")
-      nil (not init-file-debug))
+(defvar doom-gc-cons-upper-limit 268435456 ; 256mb
+  "The temporary value for `gc-cons-threshold' to defer it.")
 
-(if (not (version<= spacemacs-emacs-min-version emacs-version))
-    (error (concat "Your version of Emacs (%s) is too old. "
-                   "Spacemacs requires Emacs version %s or above.")
-           emacs-version spacemacs-emacs-min-version)
-  ;; Disable file-name-handlers for a speed boost during init
-  (let ((file-name-handler-alist nil))
-    (require 'core-spacemacs)
-    (spacemacs|unless-dumping
-      (when (boundp 'load-path-backup)
-        (setq load-path load-path-backup)))
-    (configuration-layer/load-lock-file)
-    (spacemacs/init)
-    (configuration-layer/stable-elpa-download-tarball)
-    (configuration-layer/load)
-    (spacemacs-buffer/display-startup-note)
-    (spacemacs/setup-startup-hook)
-    (spacemacs|unless-dumping
-      (global-font-lock-mode)
-      (global-undo-tree-mode t)
-      (winner-mode t))
-    (when (and dotspacemacs-enable-server (not (spacemacs-is-dumping-p)))
-      (require 'server)
-      (when dotspacemacs-server-socket-dir
-        (setq server-socket-dir dotspacemacs-server-socket-dir))
-      (unless (server-running-p)
-        (message "Starting a server...")
-        (server-start)))
-    (spacemacs|when-dumping-strict
-      (setq load-path-backup load-path)
-      ;; disable undo-tree to prevent from segfaulting when loading the dump
-      (global-undo-tree-mode -1)
-      (setq spacemacs-dump-mode 'dumped)
-      (garbage-collect))))
+
+(defvar doom--file-name-handler-alist file-name-handler-alist)
+
+(defun doom|restore-startup-optimizations ()
+  "Resets garbage collection settings to reasonable defaults (a large
+`gc-cons-threshold' can cause random freezes otherwise) and resets
+`file-name-handler-alist'."
+  (setq file-name-handler-alist doom--file-name-handler-alist)
+  ;; Do this on idle timer to defer a possible GC pause that could result; also
+  ;; allows deferred packages to take advantage of these optimizations.
+  (run-with-idle-timer
+   3 nil (lambda () (setq-default gc-cons-threshold doom-gc-cons-threshold))))
+
+
+(if (or after-init-time noninteractive)
+    (setq gc-cons-threshold doom-gc-cons-threshold)
+  ;; A big contributor to startup times is garbage collection. We up the gc
+  ;; threshold to temporarily prevent it from running, then reset it later in
+  ;; `doom|restore-startup-optimizations'.
+  (setq gc-cons-threshold doom-gc-cons-upper-limit)
+  ;; This is consulted on every `require', `load' and various path/io functions.
+  ;; You get a minor speed up by nooping this.
+  (setq file-name-handler-alist nil)
+  ;; Not restoring these to their defaults will cause stuttering/freezes.
+  (add-hook 'after-init-hook #'doom|restore-startup-optimizations))
+
+
+;; Ensure Doom is running out of this file's directory
+(setq user-emacs-directory (file-name-directory load-file-name))
+;; In noninteractive sessions, prioritize non-byte-compiled source files to
+;; prevent stale, byte-compiled code from running. However, if you're getting
+;; recursive load errors, it may help to set this to nil.
+(setq load-prefer-newer noninteractive)
+
+
+;; Let 'er rip!
+(require 'core (concat user-emacs-directory "core/core"))
