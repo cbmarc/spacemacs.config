@@ -1,0 +1,20 @@
+
+;; ----- amx-history -----
+(
+ doom/restart
+ doom/reload
+ org-reload
+ doom//refresh
+ rjsx-mode
+ cd
+ 5x5
+)
+
+;; ----- amx-data -----
+(
+ (doom/restart . 2)
+ (doom//refresh . 2)
+ (rjsx-mode . 1)
+ (org-reload . 1)
+ (doom/reload . 1)
+)

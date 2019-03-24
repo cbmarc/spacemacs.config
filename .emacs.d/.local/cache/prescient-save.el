@@ -1,0 +1,2 @@
+
+(funcall prescient-cache-callback :version (quote 5) :history (quote #s(hash-table size 65 test equal rehash-size 1.5 rehash-threshold 0.8125 data ("suggestions" 2 "setState" 1 "className" 0))) :frequency (quote #s(hash-table size 65 test equal rehash-size 1.5 rehash-threshold 0.8125 data ("suggestions" 0.9791880578299021 "setState" 4.940314056699299 "className" 0.997))) :serial-number (quote 7))
