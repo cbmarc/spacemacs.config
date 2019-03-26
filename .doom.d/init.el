@@ -61,8 +61,8 @@
 
        :tools
        ;;ansible
-       ;;docker
-       editorconfig      ; let someone else argue about tabs vs spaces
+       docker
+       ;;editorconfig      ; let someone else argue about tabs vs spaces
        ;;ein               ; tame Jupyter notebooks with emacs
        flycheck          ; tasing you for every semicolon you forget
        ;;flyspell          ; tasing you for misspelling mispelling
@@ -143,6 +143,7 @@
        ;;(write            ; emacs as a word processor (latex + org + markdown)
        ;; +wordnut         ; wordnet (wn) search
        ;; +langtool)       ; a proofreader (grammar/style check) for Emacs
+       calendar
 
        :collab
        ;;floobits          ; peer programming for a price
